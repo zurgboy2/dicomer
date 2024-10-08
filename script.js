@@ -146,21 +146,73 @@ function displayMetadata(dataSet) {
     });
 }
 
-function handleFileSelect(event) {
-    console.log('File select event triggered');
-    if (userRole !== 'Radiologist') {
-        console.log('User is not a Radiologist');
-        showNotification('Only Radiologists can upload DICOM files.');
-        return;
-    }
+async function handleMultipleFiles(files) {
+    for (let file of files) {
+        console.log(`Processing file: ${file.name}`);
+        const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+        try {
+            const image = await cornerstone.loadImage(imageId);
+            const dataSet = image.data;
+            const patientName = dataSet.string('x00100010') || 'Unknown';
+            const patientId = dataSet.string('x00100020') || 'Unknown';
+            const key = `${patientName}_${patientId}`;
+            
+            if (!patientFiles.has(key)) {
+                patientFiles.set(key, []);
+            }
+            patientFiles.get(key).push({ file, imageId });
+            console.log(`File added for patient: ${patientName}`);
 
-    const files = event.target.files;
-    if (files.length > 0) {
-        console.log(`${files.length} file(s) selected`);
-        handleMultipleFiles(files);
-    } else {
-        console.log('No files selected');
+            // Extract metadata
+            const metadata = {
+                patientName: patientName,
+                patientId: patientId,
+                studyDate: dataSet.string('x00080020') || '',
+                modality: dataSet.string('x00080060') || ''
+            };
+
+            // Create a smaller, compressed PNG preview
+            const pngPreview = await createCompressedPreview(image);
+
+            // Add to upload queue with the compressed PNG preview
+            addToUploadQueue(file, metadata, pngPreview);
+            
+            // Initialize upload queue display
+            initializeUploadQueueItem(file.name, dataSet.byteArray.length);
+        } catch (error) {
+            console.error('Error processing file:', error);
+            showNotification(`Failed to process file: ${file.name}`);
+        }
     }
+    updatePatientTable();
+    if (files.length > 0) {
+        loadAndViewImage(files[0]);
+    }
+}
+
+async function createCompressedPreview(image) {
+    const canvas = document.createElement('canvas');
+    const maxDimension = 256; // Adjust this value to change the maximum size of the preview
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    canvas.width = image.width * scale;
+    canvas.height = image.height * scale;
+    const ctx = canvas.getContext('2d');
+    
+    // Use built-in image smoothing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Draw the scaled image
+    cornerstone.renderToCanvas(canvas, image);
+    
+    // Convert to a compressed PNG
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+        }, 'image/png', 0.5); // Adjust compression level here (0.5 = 50% quality)
+    });
 }
 
 async function handleMultipleFiles(files) {
