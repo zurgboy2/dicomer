@@ -281,6 +281,21 @@ async function uploadDICOMFile(file, metadata, pngPreview) {
     const totalChunks = Math.ceil(file.size / chunkSize);
     const fileName = file.name;
 
+    // First, upload the PNG preview
+    try {
+        const pngResponse = await apiCall('uploadPNGPreview', {
+            fileName: fileName,
+            pngPreview: pngPreview,
+            metadata: JSON.stringify(metadata)
+        });
+        console.log('PNG preview uploaded successfully');
+    } catch (error) {
+        console.error('Error uploading PNG preview:', error);
+        showNotification(`Error uploading preview for ${fileName}`);
+        return; // Exit if PNG upload fails
+    }
+
+    // Then, upload DICOM chunks
     for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
         const start = chunkIndex * chunkSize;
         const end = Math.min(start + chunkSize, file.size);
@@ -292,9 +307,7 @@ async function uploadDICOMFile(file, metadata, pngPreview) {
                 fileName: fileName,
                 chunkIndex: chunkIndex,
                 totalChunks: totalChunks,
-                dicomData: chunkArrayBuffer,
-                metadata: chunkIndex === 0 ? JSON.stringify(metadata) : null,
-                pngPreview: chunkIndex === 0 ? pngPreview : null
+                dicomData: chunkArrayBuffer
             };
 
             const response = await apiCall('uploadDICOMChunk', data);
@@ -310,7 +323,6 @@ async function uploadDICOMFile(file, metadata, pngPreview) {
         }
     }
 }
-
 function readChunkAsArrayBuffer(chunk) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -369,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
 
     console.log('Cornerstone WADO Image Loader initialized');
-    
+
     initAuth().then(() => {
         console.log('Auth initialized, user role:', userRole);
         if (userRole === 'Radiologist') {
