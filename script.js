@@ -3,9 +3,6 @@ import apiCall from './api.js';
 
 console.log('Script started');
 
-// Initialize and configure cornerstoneWADOImageLoader
-cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
 
 let isPanning = false;
 let lastX = 0;
@@ -19,18 +16,6 @@ document.addEventListener('click', (event) => {
         downloadDICOMFile(manifest);
     }
 });
-
-const config = {
-    webWorkerPath: 'lib/node_modules/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
-    taskConfiguration: {
-        decodeTask: {
-            codecsPath: 'lib/node_modules/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
-        }
-    }
-};
-cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
-
-console.log('Cornerstone WADO Image Loader initialized');
 
 let currentImageId = null;
 const patientFiles = new Map();
@@ -370,6 +355,21 @@ function loadPatientDICOM(patientKey) {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM content loaded');
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+    cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+
+    const config = {
+        webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@4.13.2/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+        taskConfiguration: {
+            decodeTask: {
+                codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@4.13.2/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+            }
+        }
+    };
+    cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
+
+    console.log('Cornerstone WADO Image Loader initialized');
+    
     initAuth().then(() => {
         console.log('Auth initialized, user role:', userRole);
         if (userRole === 'Radiologist') {
