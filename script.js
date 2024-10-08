@@ -146,6 +146,23 @@ function displayMetadata(dataSet) {
     });
 }
 
+function handleFileSelect(event) {
+    console.log('File select event triggered');
+    if (userRole !== 'Radiologist') {
+        console.log('User is not a Radiologist');
+        showNotification('Only Radiologists can upload DICOM files.');
+        return;
+    }
+
+    const files = event.target.files;
+    if (files.length > 0) {
+        console.log(`${files.length} file(s) selected`);
+        handleMultipleFiles(files);
+    } else {
+        console.log('No files selected');
+    }
+}
+
 async function handleMultipleFiles(files) {
     for (let file of files) {
         console.log(`Processing file: ${file.name}`);
@@ -213,58 +230,6 @@ async function createCompressedPreview(image) {
             reader.readAsDataURL(blob);
         }, 'image/png', 0.5); // Adjust compression level here (0.5 = 50% quality)
     });
-}
-
-async function handleMultipleFiles(files) {
-    for (let file of files) {
-        console.log(`Processing file: ${file.name}`);
-        const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-        try {
-            const image = await cornerstone.loadImage(imageId);
-            const dataSet = image.data;
-            const patientName = dataSet.string('x00100010') || 'Unknown';
-            const patientId = dataSet.string('x00100020') || 'Unknown';
-            const key = `${patientName}_${patientId}`;
-            
-            if (!patientFiles.has(key)) {
-                patientFiles.set(key, []);
-            }
-            patientFiles.get(key).push({ file, imageId });
-            console.log(`File added for patient: ${patientName}`);
-
-            // Extract metadata
-            const metadata = {
-                patientName: patientName,
-                patientId: patientId,
-                studyDate: dataSet.string('x00080020') || '',
-                modality: dataSet.string('x00080060') || ''
-            };
-
-            // Convert DICOM to high-quality PNG
-            const canvas = document.createElement('canvas');
-            const multiplier = 2; // Increase resolution
-            canvas.width = image.width * multiplier;
-            canvas.height = image.height * multiplier;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(multiplier, multiplier);
-            cornerstone.renderToCanvas(canvas, image);
-            const pngDataUrl = canvas.toDataURL('image/png', 1.0); // Use maximum quality
-            const pngBase64 = pngDataUrl.split(',')[1];
-
-            // Add to upload queue with the high-quality PNG preview
-            addToUploadQueue(file, metadata, pngBase64);
-            
-            // Initialize upload queue display
-            initializeUploadQueueItem(file.name, dataSet.byteArray.length);
-        } catch (error) {
-            console.error('Error processing file:', error);
-            showNotification(`Failed to process file: ${file.name}`);
-        }
-    }
-    updatePatientTable();
-    if (files.length > 0) {
-        loadAndViewImage(files[0]);
-    }
 }
 
 function initializeUploadQueueItem(fileName, fileSize) {
