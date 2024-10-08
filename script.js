@@ -209,7 +209,7 @@ async function handleMultipleFiles(files) {
 
 async function createCompressedPreview(image) {
     const canvas = document.createElement('canvas');
-    const maxDimension = 256; // Adjust this value to change the maximum size of the preview
+    const maxDimension = 1024; // Increased to 1024 pixels
     const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
     canvas.width = image.width * scale;
     canvas.height = image.height * scale;
@@ -222,13 +222,63 @@ async function createCompressedPreview(image) {
     // Draw the scaled image
     cornerstone.renderToCanvas(canvas, image);
     
-    // Convert to a compressed PNG
+    // Convert to a high-quality PNG
     return new Promise((resolve) => {
         canvas.toBlob((blob) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onloadend = () => {
+                const base64Data = reader.result.split(',')[1];
+                const sizeInMB = (base64Data.length * 0.75 / (1024 * 1024)).toFixed(2);
+                console.log(`Preview image size: ${sizeInMB} MB`);
+                
+                // Check if the size is within our limit
+                if (parseFloat(sizeInMB) <= 3) {
+                    resolve(base64Data);
+                } else {
+                    // If it's too large, recursively call with reduced quality
+                    createCompressedPreviewWithQuality(image, 0.9)
+                        .then(resolve);
+                }
+            };
             reader.readAsDataURL(blob);
-        }, 'image/png', 0.9); // Adjust compression level here (0.5 = 50% quality)
+        }, 'image/png', 1.0); // Full quality PNG
+    });
+}
+
+async function createCompressedPreviewWithQuality(image, quality) {
+    const canvas = document.createElement('canvas');
+    const maxDimension = 1024;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    canvas.width = image.width * scale;
+    canvas.height = image.height * scale;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    cornerstone.renderToCanvas(canvas, image);
+    
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Data = reader.result.split(',')[1];
+                const sizeInMB = (base64Data.length * 0.75 / (1024 * 1024)).toFixed(2);
+                console.log(`Preview image size (quality ${quality}): ${sizeInMB} MB`);
+                
+                if (parseFloat(sizeInMB) <= 3) {
+                    resolve(base64Data);
+                } else if (quality > 0.5) {
+                    // Recursively try with a lower quality
+                    createCompressedPreviewWithQuality(image, quality - 0.1)
+                        .then(resolve);
+                } else {
+                    // If we've reached 0.5 quality and it's still too big, we'll have to use this version
+                    resolve(base64Data);
+                }
+            };
+            reader.readAsDataURL(blob);
+        }, 'image/png', quality);
     });
 }
 
