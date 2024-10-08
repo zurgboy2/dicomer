@@ -171,6 +171,9 @@ export async function fetchPatientList() {
 
 
 async function showPatientPreview(patientName) {
+    // Show loading popup
+    showLoadingPopup();
+
     try {
         const response = await apiCall('getPatientPreview', { patientName, googleToken });
         if (response.success && response.imagePreview) {
@@ -193,6 +196,27 @@ async function showPatientPreview(patientName) {
     } catch (error) {
         console.error('Error fetching patient preview:', error);
         showNotification('Error fetching preview');
+    } finally {
+        // Hide loading popup
+        hideLoadingPopup();
+    }
+}
+
+function showLoadingPopup() {
+    const loadingPopup = document.createElement('div');
+    loadingPopup.id = 'loadingPopup';
+    loadingPopup.className = 'loading-popup';
+    loadingPopup.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Loading preview...</p>
+    `;
+    document.body.appendChild(loadingPopup);
+}
+
+function hideLoadingPopup() {
+    const loadingPopup = document.getElementById('loadingPopup');
+    if (loadingPopup) {
+        document.body.removeChild(loadingPopup);
     }
 }
 
