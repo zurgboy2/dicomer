@@ -228,7 +228,7 @@ async function createCompressedPreview(image) {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
             reader.readAsDataURL(blob);
-        }, 'image/png', 0.5); // Adjust compression level here (0.5 = 50% quality)
+        }, 'image/png', 0.9); // Adjust compression level here (0.5 = 50% quality)
     });
 }
 
