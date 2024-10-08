@@ -55,7 +55,6 @@ const apiCall = async (action, additionalData = {}) => {
 
     for (const [key, value] of Object.entries(additionalData)) {
       if (value instanceof ArrayBuffer || value instanceof Uint8Array) {
-        // Use a more memory-efficient method for large binary data
         requestBody[key] = await blobToBase64(new Blob([value]));
       } else if (typeof value === 'object' && value !== null) {
         requestBody[key] = JSON.stringify(value);
@@ -64,10 +63,27 @@ const apiCall = async (action, additionalData = {}) => {
       }
     }
 
+    // Log the size of the request body
+    const requestBodyString = JSON.stringify(requestBody);
+    const requestBodySize = new Blob([requestBodyString]).size;
+    console.log(`Request body size: ${requestBodySize} bytes`);
+
+    // If the size is very large, log more details
+    if (requestBodySize > 1000000) { // Log if larger than 1MB
+      console.log('Large request details:');
+      for (const [key, value] of Object.entries(requestBody)) {
+        if (typeof value === 'string') {
+          console.log(`${key}: ${value.length} characters`);
+        } else {
+          console.log(`${key}: ${JSON.stringify(value).length} characters`);
+        }
+      }
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
+      body: requestBodyString,
     });
 
     if (!response.ok) {
@@ -78,10 +94,9 @@ const apiCall = async (action, additionalData = {}) => {
     return await response.json();
   } catch (error) {
     console.error('API call failed:', error);
-    throw error; // Re-throw the error instead of calling handleApiError
+    throw error;
   }
 };
-
 // Helper function to convert Blob to base64
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
