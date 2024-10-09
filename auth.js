@@ -196,15 +196,10 @@ async function showPatientDetails(patientId, patientName) {
     showLoadingPopup();
 
     try {
-        // Find the patient in the existing list
-        const patientList = document.getElementById('patientList');
-        const patientData = JSON.parse(patientList.dataset.patients || '[]');
-        const patient = patientData.find(p => p['Patient ID'] === patientId);
-
-        // Fetch patient preview
+        // Fetch patient preview and chat messages
         const previewResponse = await apiCall('getPatientPreview', { patientName, googleToken });
 
-        if (patient && patient.ChatMessages && previewResponse.success && previewResponse.imagePreview) {
+        if (previewResponse.success && previewResponse.imagePreview) {
             const detailsModal = document.createElement('div');
             detailsModal.className = 'details-modal';
             detailsModal.innerHTML = `
@@ -230,8 +225,8 @@ async function showPatientDetails(patientId, patientName) {
             
             function displayChatMessages() {
                 chatMessagesContainer.innerHTML = '';
-                if (Array.isArray(patient.ChatMessages)) {
-                    patient.ChatMessages.forEach(message => {
+                if (Array.isArray(previewResponse.chatMessages)) {
+                    previewResponse.chatMessages.forEach(message => {
                         const messageElement = document.createElement('div');
                         messageElement.className = 'chat-message';
                         messageElement.innerHTML = `
@@ -263,16 +258,12 @@ async function showPatientDetails(patientId, patientName) {
                             googleToken 
                         });
                         if (response.success) {
-                            // Add the new message to the patient's chat messages
-                            if (!Array.isArray(patient.ChatMessages)) {
-                                patient.ChatMessages = [];
+                            // Refresh the chat messages
+                            const updatedPreview = await apiCall('getPatientPreview', { patientName, googleToken });
+                            if (updatedPreview.success) {
+                                previewResponse.chatMessages = updatedPreview.chatMessages;
+                                displayChatMessages();
                             }
-                            patient.ChatMessages.push({
-                                name: localStorage.getItem('username') || 'User',
-                                timestamp: new Date().toISOString(),
-                                message: message
-                            });
-                            displayChatMessages();
                             messageInput.value = ''; // Clear the input field
                         } else {
                             throw new Error(response.message || 'Failed to send message');
