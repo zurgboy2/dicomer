@@ -342,4 +342,4 @@ export async function loadPatientDICOM(fileName) {
     }
 }
 
-export { showNotification, userRole, googleToken, logout };
+export { showNotification, userRole, googleToken};
