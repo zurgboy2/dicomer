@@ -122,6 +122,9 @@ export async function fetchPatientList() {
             patientList.style.display = 'block';
             patientList.innerHTML = ''; // Clear existing list
 
+            // Store patient data in the DOM
+            patientList.dataset.patients = JSON.stringify(response.data);
+
             if (response.data.length === 0) {
                 patientList.innerHTML = '<p>No patients found.</p>';
             } else {
@@ -147,16 +150,15 @@ export async function fetchPatientList() {
                         <td>${patient['Patient Name'] || 'Unknown'}</td>
                         <td>${patient['File Name'] || 'Unknown'}</td>
                         <td>${new Date(patient['Date']).toLocaleDateString()}</td>
-                        <td><button class="preview-btn" data-patient-id="${patient['Patient ID']}">
-                            <span class="material-symbols-outlined">visibility</span>
+                        <td><button class="details-btn" data-patient-id="${patient['Patient ID']}">
+                            <span class="material-symbols-outlined">info</span> Details
                         </button></td>
                         <td><button class="download-btn" data-manifest='${JSON.stringify(patient.Manifest)}'>
                             <span class="material-symbols-outlined">download</span>
                         </button></td>
                     `;
                     
-                    // Add this line here
-                    row.querySelector('.preview-btn').addEventListener('click', () => showPatientPreview(patient['Patient Name']));
+                    row.querySelector('.details-btn').addEventListener('click', () => showPatientDetails(patient['Patient ID'], patient['Patient Name']));
                 });
             }
         } else {
@@ -168,36 +170,115 @@ export async function fetchPatientList() {
     }
 }
 
-
-
-async function showPatientPreview(patientName) {
-    // Show loading popup
+async function showPatientDetails(patientId, patientName) {
     showLoadingPopup();
 
     try {
-        const response = await apiCall('getPatientPreview', { patientName, googleToken });
-        if (response.success && response.imagePreview) {
-            const previewModal = document.createElement('div');
-            previewModal.className = 'preview-modal';
-            previewModal.innerHTML = `
-                <div class="preview-content">
-                    <img src="data:${response.mimeType};base64,${response.imagePreview}" alt="Patient DICOM Preview">
-                    <button class="close-preview">Close</button>
+        // Find the patient in the existing list
+        const patientList = document.getElementById('patientList');
+        const patientData = JSON.parse(patientList.dataset.patients || '[]');
+        const patient = patientData.find(p => p['Patient ID'] === patientId);
+
+        // Fetch patient preview
+        const previewResponse = await apiCall('getPatientPreview', { patientName, googleToken });
+
+        if (patient && patient.ChatMessages && previewResponse.success && previewResponse.imagePreview) {
+            const detailsModal = document.createElement('div');
+            detailsModal.className = 'details-modal';
+            detailsModal.innerHTML = `
+                <div class="details-content">
+                    <div class="chat-container">
+                        <h3>Patient Chat</h3>
+                        <div class="chat-messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chatMessageInput" placeholder="Type your message...">
+                            <button id="sendChatMessage">Send</button>
+                        </div>
+                    </div>
+                    <div class="preview-container">
+                        <h3>Image Preview</h3>
+                        <img src="data:${previewResponse.mimeType};base64,${previewResponse.imagePreview}" alt="Patient DICOM Preview">
+                    </div>
+                    <button class="close-details">Close</button>
                 </div>
             `;
-            document.body.appendChild(previewModal);
+            document.body.appendChild(detailsModal);
+
+            const chatMessagesContainer = detailsModal.querySelector('.chat-messages');
             
-            previewModal.querySelector('.close-preview').addEventListener('click', () => {
-                document.body.removeChild(previewModal);
+            function displayChatMessages() {
+                chatMessagesContainer.innerHTML = '';
+                if (Array.isArray(patient.ChatMessages)) {
+                    patient.ChatMessages.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'chat-message';
+                        messageElement.innerHTML = `
+                            <strong>${message.name}</strong> (${new Date(message.timestamp).toLocaleString()}):
+                            <p>${message.message}</p>
+                        `;
+                        chatMessagesContainer.appendChild(messageElement);
+                    });
+                } else {
+                    chatMessagesContainer.innerHTML = '<p>No chat messages available.</p>';
+                }
+                // Scroll to the bottom of the chat
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            }
+
+            displayChatMessages();
+
+            // Add event listener for sending messages
+            const sendButton = detailsModal.querySelector('#sendChatMessage');
+            const messageInput = detailsModal.querySelector('#chatMessageInput');
+
+            sendButton.addEventListener('click', async () => {
+                const message = messageInput.value.trim();
+                if (message) {
+                    try {
+                        const response = await apiCall('addChatMessage', { 
+                            patientName, 
+                            message, 
+                            googleToken 
+                        });
+                        if (response.success) {
+                            // Add the new message to the patient's chat messages
+                            if (!Array.isArray(patient.ChatMessages)) {
+                                patient.ChatMessages = [];
+                            }
+                            patient.ChatMessages.push({
+                                name: localStorage.getItem('username') || 'User',
+                                timestamp: new Date().toISOString(),
+                                message: message
+                            });
+                            displayChatMessages();
+                            messageInput.value = ''; // Clear the input field
+                        } else {
+                            throw new Error(response.message || 'Failed to send message');
+                        }
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        showNotification('Error sending message');
+                    }
+                }
+            });
+
+            // Allow sending message with Enter key
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+            
+            detailsModal.querySelector('.close-details').addEventListener('click', () => {
+                document.body.removeChild(detailsModal);
             });
         } else {
-            showNotification(response.message || 'Failed to load preview');
+            throw new Error('Failed to load patient details or preview');
         }
     } catch (error) {
-        console.error('Error fetching patient preview:', error);
-        showNotification('Error fetching preview');
+        console.error('Error fetching patient details:', error);
+        showNotification('Error fetching patient details');
     } finally {
-        // Hide loading popup
         hideLoadingPopup();
     }
 }
