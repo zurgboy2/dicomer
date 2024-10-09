@@ -1,3 +1,4 @@
+/* Base Styles */
 body {
     font-family: Arial, sans-serif;
     background-color: #121212;
@@ -10,6 +11,7 @@ body {
     min-height: 100vh;
 }
 
+/* Layout */
 #mainContent {
     display: flex;
     flex-direction: column;
@@ -19,6 +21,16 @@ body {
     margin: 0 auto;
 }
 
+.viewer-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1024px;
+    margin: 0 auto;
+}
+
+/* Toolbar */
 .toolbar {
     display: flex;
     flex-direction: column;
@@ -48,6 +60,7 @@ body {
     background-color: #3700B3;
 }
 
+/* File Input */
 #fileInputContainer {
     width: 100%;
     margin-bottom: 20px;
@@ -77,43 +90,7 @@ body {
     display: none;
 }
 
-.loading-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    z-index: 1000;
-}
-
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 10px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.viewer-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 1024px;
-    margin: 0 auto;
-}
-
+/* DICOM Viewer */
 #dicomImage {
     width: 70%;
     height: auto;
@@ -123,6 +100,13 @@ body {
     cursor: move;
 }
 
+#zoomSlider {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Metadata Panel */
 #metadataPanel {
     width: 28%;
     background-color: #1e1e1e;
@@ -178,12 +162,7 @@ body {
     background: #4b0beb;
 }
 
-#zoomSlider {
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-}
-
+/* Login Form */
 #loginForm {
     display: flex;
     flex-direction: column;
@@ -234,6 +213,7 @@ body {
     background-color: #2c2c2c;
 }
 
+/* Top Bar */
 #topBar {
     display: flex;
     justify-content: flex-end;
@@ -255,6 +235,7 @@ body {
     background-color: #4b0beb;
 }
 
+/* Patient List */
 #patientList {
     background-color: #1e1e1e;
     padding: 20px;
@@ -265,6 +246,83 @@ body {
     display: none;
 }
 
+.patient-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.patient-table th, .patient-table td {
+    padding: 15px;
+    border: none;
+    text-align: left;
+    background-color: #2c2c2c;
+}
+
+.patient-table th {
+    background-color: #3700B3;
+    color: white;
+}
+
+.patient-table tr {
+    margin-bottom: 10px;
+}
+
+.patient-table tr:hover {
+    background-color: #3d3d3d;
+    cursor: pointer;
+}
+
+.patient-table td:first-child,
+.patient-table th:first-child {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.patient-table td:last-child,
+.patient-table th:last-child {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+/* Buttons */
+.details-btn, .download-btn, .preview-btn, #sendChatMessage {
+    background-color: #3700B3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.details-btn:hover, .download-btn:hover, .preview-btn:hover, #sendChatMessage:hover {
+    background-color: #4b0beb;
+}
+
+.details-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.details-btn .material-symbols-outlined {
+    margin-right: 5px;
+}
+
+.download-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.download-btn.downloading {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+/* Notifications */
 .notification {
     position: fixed;
     top: 20px;
@@ -291,6 +349,7 @@ body {
     to { opacity: 0; }
 }
 
+/* Upload Queue */
 .queue-module {
     margin-top: 20px;
     border: 1px solid #3700B3;
@@ -346,27 +405,6 @@ body {
     margin-bottom: 5px;
 }
 
-.download-btn, .preview-btn {
-    background-color: #3700B3;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-    margin: 0 5px;
-}
-
-.download-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-.download-btn.downloading {
-    background-color: #cccccc;
-    color: #666666;
-}
-
 .progress-container {
     width: 100%;
     background-color: #2c2c2c;
@@ -381,6 +419,7 @@ body {
     transition: width 0.3s ease-in-out;
 }
 
+/* Preview Modal */
 .preview-modal {
     position: fixed;
     top: 0;
@@ -416,47 +455,7 @@ body {
     cursor: pointer;
 }
 
-.patient-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-    margin-top: 20px;
-    overflow-x: auto;
-}
-
-.patient-table th, .patient-table td {
-    padding: 15px;
-    border: none;
-    text-align: left;
-    background-color: #2c2c2c;
-}
-
-.patient-table th {
-    background-color: #3700B3;
-    color: white;
-}
-
-.patient-table tr {
-    margin-bottom: 10px;
-}
-
-.patient-table tr:hover {
-    background-color: #3d3d3d;
-    cursor: pointer;
-}
-
-.patient-table td:first-child,
-.patient-table th:first-child {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-}
-
-.patient-table td:last-child,
-.patient-table th:last-child {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-}
-
+/* Loading Popup */
 .loading-popup {
     position: fixed;
     top: 0;
@@ -491,6 +490,7 @@ body {
     font-size: 18px;
 }
 
+/* Details Modal */
 .details-modal {
     position: fixed;
     top: 0;
@@ -525,6 +525,9 @@ body {
     background-color: #2c2c2c;
     padding: 10px;
     border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
 }
 
 .chat-message {
@@ -557,44 +560,27 @@ body {
     margin-top: 10px;
 }
 
-.chat-input input {
+#chatMessageInput {
     flex-grow: 1;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-.chat-input button {
-    margin-left: 5px;
-    padding: 5px 10px;
-    background-color: #3700B3;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-.chat-messages {
-    max-height: 300px;
-    overflow-y: auto;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #2c2c2c;
+    color: #ffffff;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
 }
 
-@media (max-width: 767px) {
-    .details-content {
-        flex-direction: column;
-        overflow-y: auto;
-    }
-
-    .chat-container, .preview-container {
-        max-height: none;
-        margin: 10px 0;
-    }
+#chatMessageInput:focus {
+    outline: none;
+    background-color: #3d3d3d;
 }
 
+#sendChatMessage {
+    margin-left: 10px;
+}
+
+/* Media Queries */
 @media (max-width: 767px) {
     body {
         padding: 10px;
@@ -650,5 +636,15 @@ body {
 
     #patientList {
         display: block;
+    }
+
+    .details-content {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .chat-container, .preview-container {
+        max-height: none;
+        margin: 10px 0;
     }
 }
