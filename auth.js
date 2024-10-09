@@ -16,6 +16,7 @@ export function initAuth() {
     return new Promise((resolve) => {
         document.getElementById('loginBtn').addEventListener('click', login);
         document.getElementById('createAccountBtn').addEventListener('click', createAccount);
+        document.getElementById('logoutBtn').addEventListener('click', logout);
         
         // Check if the user is already logged in
         const storedToken = localStorage.getItem('googleToken');
@@ -170,6 +171,27 @@ export async function fetchPatientList() {
     }
 }
 
+export function logout() {
+    // Clear local storage
+    localStorage.removeItem('googleToken');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userRole');
+
+    // Reset global variables
+    userRole = '';
+    googleToken = '';
+
+    // Hide main content and show login form
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+
+    // Clear any sensitive data from the page
+    document.getElementById('patientList').innerHTML = '';
+
+    // Show a notification
+    showNotification('You have been logged out');
+}
+
 async function showPatientDetails(patientId, patientName) {
     showLoadingPopup();
 
@@ -320,4 +342,4 @@ export async function loadPatientDICOM(fileName) {
     }
 }
 
-export { showNotification, userRole, googleToken };
+export { showNotification, userRole, googleToken, logout };

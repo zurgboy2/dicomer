@@ -234,6 +234,27 @@ body {
     background-color: #2c2c2c;
 }
 
+#topBar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    background-color: #1e1e1e;
+}
+
+#logoutBtn {
+    background-color: #3700B3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#logoutBtn:hover {
+    background-color: #4b0beb;
+}
+
 #patientList {
     background-color: #1e1e1e;
     padding: 20px;

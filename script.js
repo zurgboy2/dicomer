@@ -1,4 +1,4 @@
-import { initAuth, showNotification, userRole } from './auth.js';
+import { initAuth, showNotification, userRole} from './auth.js';
 import apiCall from './api.js';
 
 console.log('Script started');
